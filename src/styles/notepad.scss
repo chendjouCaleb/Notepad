@@ -1,0 +1,37 @@
+.notepad {
+  border: 1px solid red;
+  position: relative;
+  display: block;
+}
+
+.editor {
+  display: block;
+  width: 100%;
+  position: relative;
+  min-height: 700px;
+  cursor: text;
+  box-sizing: border-box;
+  border: 1px solid;
+  font-size: 14px;
+
+  &:focus {
+    outline: none;
+    border: 1px solid #0078D4;
+  }
+}
+
+
+.notepad-cursor {
+  position: absolute;
+  display: inline-block;
+  width: 1px;
+  background: black;
+
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0% { opacity: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 0; }
+}
