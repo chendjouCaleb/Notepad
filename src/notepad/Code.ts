@@ -2,6 +2,7 @@ export class KeyboardCode {
   public static Escape = 'Escape';
   public static Backspace = 'Backspace';
   public static Delete = 'Delete';
+  public static Enter = 'Enter';
 
   public static ArrowUp = 'ArrowUp';
   public static ArrowDown = 'ArrowDown';

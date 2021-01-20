@@ -1,6 +1,7 @@
 import {ChangeDetectionStrategy, Component, ElementRef, Input, Output, ViewEncapsulation} from '@angular/core';
 import {Line} from './Line';
-import {Observable, Subject} from 'rxjs';
+import {fromEvent, Observable, Subject} from 'rxjs';
+import {filter} from 'rxjs/operators';
 
 export class TextChangeEvent {
   currentText: string;
@@ -24,6 +25,7 @@ export class Editor {
   get onTextChange(): Observable<TextChangeEvent> {
     return this._onTextChange.asObservable();
   }
+
   get lines(): Line[] {
     return this._lines.slice();
   }
@@ -38,12 +40,18 @@ export class Editor {
   get text(): string {
     return this._lines.map(l => l.text).join('\n');
   }
+
   private _onTextChange = new Subject<TextChangeEvent>();
 
   private _lines: Line[] = [];
 
   @Input()
-  textWidthFn: (text: string) => number = text => text != null ? text.length : 0
+  textWidthFn: (text: string) => number = text => text != null ? text.length : 0;
+
+  onkeydown(key?: string): Observable<KeyboardEvent> {
+    const event = fromEvent<KeyboardEvent>(document, 'keydown');
+    return event.pipe(filter(e => !e.altKey && !e.shiftKey && !e.ctrlKey && (e.key === key || key == null)));
+  }
 
   insertText(text: string, line: Line, index: number): Line[] {
 
@@ -58,7 +66,7 @@ export class Editor {
     const lineCount = textLines.length;
 
     const lines: Line[] = [line];
-    for (let i = 1; i < lineCount ; i++) {
+    for (let i = 1; i < lineCount; i++) {
       lines[i] = this.insertLine(line.index + i + 1);
     }
 
@@ -81,16 +89,24 @@ export class Editor {
     return [currentText.slice(0, index), text, currentText.slice(index)].join('');
   }
 
-  insertTextAt(text: string, lineIndex: number, index: number): string {
-    throw new Error('Not implemented method!');
+  insertTextAt(text: string, lineIndex: number, index: number): Line[]{
+    const line = this._lines[index];
+    return this.insertText(text, line, index);
   }
 
-  appendSpace(line: Line, index: number, count: number): string {
-    throw new Error('Not implemented method!');
+  insertChar(text: string, line: Line, index: number): Line {
+    if (index > line.length) {
+      throw new Error('Target index is out of range');
+    }
+
+    text = this.mergeText(line.text, text, index);
+    this._setLineText(line, text);
+    return line;
   }
 
-  removeChar(line: Line, index: number): string {
-    throw new Error('Not implemented method!');
+  removeChar(line: Line, index: number): void {
+    const text = line.text.slice(0, index) + line.text.slice(index + 1);
+    this._setLineText(line, text);
   }
 
   removeTextAtLine(line: Line, startIndex: number, endIndex: number): string {
@@ -108,7 +124,23 @@ export class Editor {
    * @return The new line.
    */
   breakLine(line: Line, index: number): Line {
-    throw new Error('Not implemented method!');
+    const newLine = this.insertLine(line.index + 1);
+    let text = '';
+    let newLineText = '';
+
+    if (index <= 0) {
+      newLineText = line.text;
+    } else if (index >= line.text.length) {
+      text = line.text;
+    } else {
+      text = line.text.slice(0, index);
+      newLineText = line.text.slice(index);
+    }
+
+
+    this._setLineText(line, text);
+    this._setLineText(newLine, newLineText);
+    return newLine;
   }
 
   insertLine(index: number = 0): Line {
@@ -167,6 +199,12 @@ export class Editor {
 
   _emitTextChangeEvent(addition: string): void {
     return;
+  }
+
+  _setLineText(line: Line, text: string): void {
+    line.text = text;
+    line.host.innerText = text.trim();
+    line.length = this.textWidthFn(text);
   }
 }
 

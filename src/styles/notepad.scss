@@ -20,6 +20,10 @@
   }
 }
 
+.editor-line {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  height: 20px;
+}
 
 .notepad-cursor {
   position: absolute;

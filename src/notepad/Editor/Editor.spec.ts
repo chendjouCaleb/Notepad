@@ -1,5 +1,6 @@
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {Editor} from './Editor';
+import {Line} from './Line';
 
 describe('Editor behavior', () => {
   let component: ComponentFixture<Editor>;
@@ -117,43 +118,45 @@ describe('Editor behavior', () => {
 
 
   it('Add multiline text', () => {
-    const textLines = multilineText.split('\n');
+      const textLines = multilineText.split('\n');
 
-    const lineCount = textLines.length;
-    const line = editor.insertLine(0);
-    editor.insertText(multilineText, line, 0);
+      const lineCount = textLines.length;
+      const line = editor.insertLine(0);
+      editor.insertText(multilineText, line, 0);
 
-    expect(editor.lines.length).toBe(lineCount);
+      expect(editor.lines.length).toBe(lineCount);
 
 
-    for (let i = 0; i < editor.lines.length; i++) {
-      expect(editor.lines[i].text).toBe(textLines[i]);
-      expect(editor.lines[i].host.innerText).toBe(textLines[i].trim());
-      expect(editor.lines[i].length).toBe(editor.textWidthFn(textLines[i]));
-      expect(editor.lines[i].index).toBe(i);
-      expect(multilineText).toBe(editor.text);
-    }}
+      for (let i = 0; i < editor.lines.length; i++) {
+        expect(editor.lines[i].text).toBe(textLines[i]);
+        expect(editor.lines[i].host.innerText).toBe(textLines[i].trim());
+        expect(editor.lines[i].length).toBe(editor.textWidthFn(textLines[i]));
+        expect(editor.lines[i].index).toBe(i);
+        expect(multilineText).toBe(editor.text);
+      }
+    }
   );
 
   it('Add multiline text at middle of line', () => {
-    const line = editor.insertLine(0);
-    editor.insertText('abc123', line, 0);
-    editor.insertText(multilineText, line, 3);
+      const line = editor.insertLine(0);
+      editor.insertText('abc123', line, 0);
+      editor.insertText(multilineText, line, 3);
 
-    const finalText = 'abc' + multilineText + '123';
-    const textLines = finalText.split('\n');
-    const lineCount = textLines.length;
+      const finalText = 'abc' + multilineText + '123';
+      const textLines = finalText.split('\n');
+      const lineCount = textLines.length;
 
-    expect(editor.lines.length).toBe(lineCount);
+      expect(editor.lines.length).toBe(lineCount);
 
 
-    for (let i = 0; i < editor.lines.length; i++) {
-      expect(editor.lines[i].text).toBe(textLines[i]);
-      expect(editor.lines[i].host.innerText).toBe(textLines[i].trim());
-      expect(editor.lines[i].length).toBe(editor.textWidthFn(textLines[i]));
-      expect(editor.lines[i].index).toBe(i);
-      expect(finalText).toBe(editor.text);
-    }}
+      for (let i = 0; i < editor.lines.length; i++) {
+        expect(editor.lines[i].text).toBe(textLines[i]);
+        expect(editor.lines[i].host.innerText).toBe(textLines[i].trim());
+        expect(editor.lines[i].length).toBe(editor.textWidthFn(textLines[i]));
+        expect(editor.lines[i].index).toBe(i);
+        expect(finalText).toBe(editor.text);
+      }
+    }
   );
 
   it('Add text at the beginning line', () => {
@@ -182,6 +185,83 @@ describe('Editor behavior', () => {
     expect(line.host.innerText).toBe(finalText);
     expect(editor.text).toBe(finalText);
   });
+
+  it('Remove char at beginning of line', () => {
+    const text = '0123456789';
+    const line = editor.insertLine(0);
+    editor.insertText(text, line, 0);
+    editor.removeChar(line, 0);
+
+    expect(editor.lines.length).toBe(1);
+    checkLineText(editor, line, '123456789');
+  });
+
+  it('Remove char at the middle of line', () => {
+    const text = '0123456789';
+    const line = editor.insertLine(0);
+    editor.insertText(text, line, 0);
+    editor.removeChar(line, 4);
+
+    expect(editor.lines.length).toBe(1);
+    checkLineText(editor, line, '012356789');
+  });
+
+  it('Remove char at the end of line', () => {
+    const text = '0123456789';
+    const line = editor.insertLine(0);
+    editor.insertText(text, line, 0);
+    editor.removeChar(line, 9);
+
+    expect(editor.lines.length).toBe(1);
+    checkLineText(editor, line, '012345678');
+  });
+
+
+  it('Break line at the beginning', () => {
+    const text = '0123456789';
+    const line = editor.insertLine(0);
+    editor.insertText(text, line, 0);
+    const newLine = editor.breakLine(line, 0);
+
+    expect(line.index).toBe(0);
+    expect(newLine.index).toBe(1);
+
+    expect(newLine.text).toBe(text);
+    expect(line.text).toBe('');
+
+    expect(editor.lines.length).toBe(2);
+  });
+
+  it('Break line at the middle', () => {
+    const text = '0123456789';
+    const line = editor.insertLine(0);
+    editor.insertText(text, line, 0);
+    const newLine = editor.breakLine(line, 4);
+
+    expect(line.index).toBe(0);
+    expect(newLine.index).toBe(1);
+
+    expect(newLine.text).toBe('456789');
+    expect(line.text).toBe('0123');
+
+    expect(editor.lines.length).toBe(2);
+  });
+
+
+  it('Break line at the end', () => {
+    const text = '0123456789';
+    const line = editor.insertLine(0);
+    editor.insertText(text, line, 0);
+    const newLine = editor.breakLine(line, 10);
+
+    expect(line.index).toBe(0);
+    expect(newLine.index).toBe(1);
+
+    expect(newLine.text).toBe('');
+    expect(line.text).toBe(text);
+
+    expect(editor.lines.length).toBe(2);
+  });
 });
 
 function checkLineIndex(editor: Editor): void {
@@ -191,6 +271,12 @@ function checkLineIndex(editor: Editor): void {
     const elementIndex = Array.from(editor.host.children).indexOf(line.host);
     expect(elementIndex).toBe(index);
   });
+}
+
+function checkLineText(editor: Editor, line: Line, text: string): void {
+  expect(text).toBe(line.text);
+  expect(editor.textWidthFn(text)).toBe(line.length);
+  expect(text).toBe(line.host.innerText);
 }
 
 function addLines(editor: Editor, count: number = 10): void {
