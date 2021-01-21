@@ -38,7 +38,7 @@ export class Cursor {
     if (editor.lines.length === 0) {
       editor.insertLine(0);
     }
-    this._currentLine = editor.lines[0];
+    this._setCurrentLine(editor.lines[0]);
 
     this.updateView();
 
@@ -76,7 +76,7 @@ export class Cursor {
       this._x = line.text.length;
       this.editor.insertText(this.currentLine.text, line, line.text.length);
       this.editor.removeLine(this.currentLine);
-      this._currentLine = line;
+      this._setCurrentLine(line);
 
       this.updateView();
     } else {
@@ -86,7 +86,7 @@ export class Cursor {
   }
 
   break(): void {
-    this._currentLine = this.editor.breakLine(this._currentLine, this.x);
+    this._setCurrentLine(this.editor.breakLine(this._currentLine, this.x));
     this._x = 0;
     this.updateView();
   }
@@ -94,6 +94,7 @@ export class Cursor {
   left(): Promise<void> {
     this._x = this._x > 0 ? this._x - 1 : 0;
     this.updateView();
+    return Promise.resolve();
   }
 
   right(): Promise<void> {
@@ -101,26 +102,38 @@ export class Cursor {
       this._x++;
       this.updateView();
     }
+    return Promise.resolve();
   }
 
   up(): Promise<void> {
     if (this.currentLine.index > 0) {
-      this._currentLine = this.editor.lines[this._currentLine.index - 1];
+      this._setCurrentLine(this.editor.lines[this._currentLine.index - 1]);
       this.updateView();
     }
+    return Promise.resolve();
   }
 
   down(): Promise<void> {
     if (this.currentLine.index < this.editor.lines.length - 1) {
-      this._currentLine = this.editor.lines[this._currentLine.index + 1];
+      this._setCurrentLine(this.editor.lines[this._currentLine.index + 1]);
       this.updateView();
     }
+    return Promise.resolve();
+  }
+
+  private _setCurrentLine(line: Line): void {
+    if (this.currentLine) {
+      this.currentLine.host.classList.remove('current');
+    }
+
+    this._currentLine = line;
+    this.currentLine.host.classList.add('current');
   }
 
 
   updateView(): void {
     this._element.style.height = this._currentLine.host.offsetHeight + 'px';
-    this._element.style.top = this._currentLine.host.offsetTop + 'px';
+    this._element.style.top = (this._currentLine.host.offsetTop + 1) + 'px';
     this._element.style.left = (this.editor.textWidthFn(this._currentLine.text.slice(0, this._x)) + 1) + 'px';
   }
 }

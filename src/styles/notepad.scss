@@ -1,5 +1,4 @@
 .notepad {
-  border: 1px solid red;
   position: relative;
   display: block;
 }
@@ -13,23 +12,29 @@
   box-sizing: border-box;
   border: 1px solid;
   font-size: 14px;
+  overflow: auto;
 
   &:focus {
     outline: none;
-    border: 1px solid #0078D4;
+    border: 1px solid #a0aeb2;
   }
 }
 
 .editor-line {
-  border: 1px solid rgba(0, 0, 0, 0.1);
   height: 20px;
+  box-sizing: border-box;
+  border: 1px solid transparent;;
+
+  &.current {
+    border-color: rgba(0, 78, 140, 0.2);
+  }
 }
 
 .notepad-cursor {
   position: absolute;
   display: inline-block;
-  width: 1px;
-  background: black;
+  width: 2px;
+  background: #004e8c;
 
   animation: blink 1s infinite;
 }
