@@ -1,0 +1,19 @@
+:host{
+  display: flex;
+  justify-content: flex-end;
+  height: 20px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  color: #FFF;
+  background-color: #004e8c;
+
+  font-size: 13px;
+
+  & .state-item {
+    margin-left: 15px;
+    margin-right: 15px;
+  }
+}

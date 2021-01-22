@@ -1,3 +1,11 @@
 <TextWidth></TextWidth>
 
-<Editor #editor></Editor>
+<Toolbar style="position: absolute; left: 0; right: 0; top: 0; height: 30px; "></Toolbar>
+
+<div class="editor-zone" >
+  <Editor #editor></Editor>
+  <LineCount [editor]="editor"></LineCount>
+</div>
+
+<StateBar #stateBar [editor]="editor"></StateBar>
+

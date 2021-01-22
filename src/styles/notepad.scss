@@ -1,23 +1,51 @@
+:root {
+  --primaryColor: #004e8c;
+  --lineCountColor: #b2c2c6;
+  --primaryColor-hover: #003a68;
+  --textColor: #FFF;
+  --editorTextColor: #393939;
+}
+
 .notepad {
   position: relative;
   display: block;
 }
 
-.editor {
+.editor-zone {
+  position: absolute;
+  top: 30px;
+  bottom: 10px;
+  left:0;
+  right: 0;
+}
+
+Editor {
+  position: absolute;
+  left: 30px;
+  right:0;
+  top:0;
+  bottom: 0;
+
+  user-select: none;
+
   display: block;
-  width: 100%;
-  position: relative;
-  min-height: 700px;
   cursor: text;
   box-sizing: border-box;
-  border: 1px solid;
   font-size: 14px;
   overflow: auto;
 
   &:focus {
     outline: none;
-    border: 1px solid #a0aeb2;
   }
+}
+
+LineCount {
+  display: block;
+  position: absolute;
+  left: 0;
+  width: 30px;
+  top: 0;
+  bottom: 0;
 }
 
 .editor-line {
@@ -26,7 +54,7 @@
   border: 1px solid transparent;;
 
   &.current {
-    border-color: rgba(0, 78, 140, 0.2);
+    background-color: rgba(0, 78, 140, 0.1);
   }
 }
 
@@ -36,11 +64,18 @@
   width: 2px;
   background: #004e8c;
 
+  transition: left 50ms ease-in-out;
   animation: blink 1s infinite;
 }
 
 @keyframes blink {
-  0% { opacity: 0; }
-  50% { opacity: 1; }
-  100% { opacity: 0; }
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }

@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, ElementRef, Input, Output, ViewEncapsulation} from '@angular/core';
+import {ChangeDetectionStrategy, Component, ElementRef, Input, Output, ViewChild, ViewEncapsulation} from '@angular/core';
 import {Line} from './Line';
 import {fromEvent, Observable, Subject} from 'rxjs';
 import {filter} from 'rxjs/operators';
@@ -13,13 +13,22 @@ export class TextChangeEvent {
   templateUrl: 'Editor.html',
   selector: 'Editor',
   encapsulation: ViewEncapsulation.None,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'editor ms-depth-16',
     tabindex: '0',
   }
 })
 export class Editor {
+
+  tabSpaceCount: number = 4;
+
+  lineEnd: string = 'CRLF';
+
+  encoding: string = 'UTF-8';
+
+  scale: number = 1;
+
+  lineHeight: number = 20;
 
   @Output()
   get onTextChange(): Observable<TextChangeEvent> {
@@ -50,7 +59,7 @@ export class Editor {
 
   onkeydown(key?: string): Observable<KeyboardEvent> {
     const event = fromEvent<KeyboardEvent>(document, 'keydown');
-    return event.pipe(filter(e => !e.altKey && !e.shiftKey && !e.ctrlKey && (e.key === key || key == null)));
+    return event.pipe(filter(e => !e.ctrlKey && (e.key === key || key == null)));
   }
 
   insertText(text: string, line: Line, index: number): Line[] {
@@ -89,7 +98,7 @@ export class Editor {
     return [currentText.slice(0, index), text, currentText.slice(index)].join('');
   }
 
-  insertTextAt(text: string, lineIndex: number, index: number): Line[]{
+  insertTextAt(text: string, lineIndex: number, index: number): Line[] {
     const line = this._lines[index];
     return this.insertText(text, line, index);
   }
@@ -203,8 +212,13 @@ export class Editor {
 
   _setLineText(line: Line, text: string): void {
     line.text = text;
-    line.host.innerText = text.trim();
+    const contentText = text.replace(/ /g, '&nbsp');
+    line.host.innerHTML = contentText;
     line.length = this.textWidthFn(text);
+  }
+
+  get size(): number {
+    return this._lines.map(l => l.text.length).reduce((a, b) => a + b, 0);
   }
 }
 

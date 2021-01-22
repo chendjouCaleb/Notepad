@@ -1,8 +1,15 @@
 import {Editor} from './Editor/Editor';
 import {Line} from './Editor/Line';
 import {KeyboardCode} from './Code';
+import {Observable, Subject} from 'rxjs';
 
 export class Cursor {
+  private _changeSubject = new Subject<void>();
+
+  get onChange(): Observable<void> {
+    return this._changeSubject.asObservable();
+  }
+
   private _element: HTMLSpanElement;
   get element(): HTMLSpanElement {
     return this._element;
@@ -44,7 +51,6 @@ export class Cursor {
 
     this.editor.onkeydown().subscribe(event => {
       if (event.key === KeyboardCode.ArrowLeft) {
-        console.log('left');
         this.left();
       } else if (event.key === KeyboardCode.ArrowRight) {
         this.right();
@@ -58,9 +64,15 @@ export class Cursor {
         this.backSpace();
       } else if (event.key === KeyboardCode.Delete) {
         this.delete();
+      } else if (event.key === KeyboardCode.Tab) {
+        event.preventDefault();
+        this.editor.insertChar('\t', this.currentLine, this.x);
+        this.right();
       } else if (event.key.length === 1) {
         this.editor.insertChar(event.key, this.currentLine, this.x);
         this.right();
+      } else {
+        console.log(event.key);
       }
     });
     this.editor.onkeydown(KeyboardCode.ArrowRight).subscribe(() => this.right());
@@ -77,23 +89,26 @@ export class Cursor {
       this.editor.insertText(this.currentLine.text, line, line.text.length);
       this.editor.removeLine(this.currentLine);
       this._setCurrentLine(line);
-
+      this._emitChangeEvent();
       this.updateView();
     } else {
       this.editor.removeChar(this.currentLine, this.x - 1);
       this.left();
     }
+
   }
 
   break(): void {
     this._setCurrentLine(this.editor.breakLine(this._currentLine, this.x));
     this._x = 0;
+    this._emitChangeEvent();
     this.updateView();
   }
 
   left(): Promise<void> {
     this._x = this._x > 0 ? this._x - 1 : 0;
     this.updateView();
+    this._emitChangeEvent();
     return Promise.resolve();
   }
 
@@ -102,6 +117,7 @@ export class Cursor {
       this._x++;
       this.updateView();
     }
+    this._emitChangeEvent();
     return Promise.resolve();
   }
 
@@ -109,6 +125,7 @@ export class Cursor {
     if (this.currentLine.index > 0) {
       this._setCurrentLine(this.editor.lines[this._currentLine.index - 1]);
       this.updateView();
+      this._emitChangeEvent();
     }
     return Promise.resolve();
   }
@@ -117,6 +134,7 @@ export class Cursor {
     if (this.currentLine.index < this.editor.lines.length - 1) {
       this._setCurrentLine(this.editor.lines[this._currentLine.index + 1]);
       this.updateView();
+      this._emitChangeEvent();
     }
     return Promise.resolve();
   }
@@ -134,6 +152,10 @@ export class Cursor {
   updateView(): void {
     this._element.style.height = this._currentLine.host.offsetHeight + 'px';
     this._element.style.top = (this._currentLine.host.offsetTop + 1) + 'px';
-    this._element.style.left = (this.editor.textWidthFn(this._currentLine.text.slice(0, this._x)) + 1) + 'px';
+    this._element.style.left = (this.editor.host.offsetLeft + this.editor.textWidthFn(this._currentLine.text.slice(0, this._x)) + 1) + 'px';
+  }
+
+  private _emitChangeEvent(): void {
+    this._changeSubject.next();
   }
 }

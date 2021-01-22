@@ -1,10 +1,20 @@
-import {AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, ViewChild, ViewEncapsulation} from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  ViewChild,
+  ViewEncapsulation
+} from '@angular/core';
 import {TextWidth} from './TextWidth/TextWidth';
 import {Cursor} from './Cursor';
 import {KeyboardCode} from './Code';
 import {Observable, Subject} from 'rxjs';
 import {filter} from 'rxjs/operators';
 import {Editor} from './Editor/Editor';
+import {State} from './State';
+import {StateBar} from './StateBar/StateBar';
 
 @Component({
   templateUrl: 'notepad.html',
@@ -17,14 +27,27 @@ import {Editor} from './Editor/Editor';
 })
 export class Notepad implements AfterViewInit {
   @ViewChild(Editor)
-  private editor: Editor;
+  private _editor: Editor;
+
+  get editor(): Editor {
+    return this._editor;
+  }
 
   @ViewChild(TextWidth)
   textWidth: TextWidth;
 
-  private _cursor: Cursor;
+  @ViewChild(StateBar)
+  stateBar: StateBar;
 
-  constructor(private _elementRef: ElementRef<HTMLElement>) {
+  state = new State();
+
+  private _cursor: Cursor;
+  get cursor(): Cursor {
+    return this._cursor;
+  }
+
+
+  constructor(private _elementRef: ElementRef<HTMLElement>, private _changeDetectorRef: ChangeDetectorRef) {
   }
 
   ngAfterViewInit(): void {
@@ -34,34 +57,17 @@ export class Notepad implements AfterViewInit {
     this.editor.insertLine(0);
 
     this._cursor = new Cursor(this.editor);
+    this.stateBar.cursor = this._cursor;
+    this._cursor.onChange.subscribe(() => {
+      console.log('change');
+      this.state.line = this._cursor.currentLine.index;
+      this.state.column = this._cursor.x;
+      this._changeDetectorRef.markForCheck();
+    });
     this.editorHost.focus();
   }
 
   onpressKey(event: KeyboardEvent): void {
-    // console.log(event);
-    //
-    // if (event.key && event.key.length === 1) {
-    //   const textBefore = this._cursor.textBefore + event.key;
-    //   const text = textBefore + this._cursor.textAfter;
-    //   this._cursor.setLeft(this.textWidth.getTextWidth(textBefore)).then();
-    //   this._cursor.x = this._cursor.textBefore.length + 1;
-    //   this._cursor.setText(text);
-    //   this.editorHost.innerText = text;
-    //   this._text = text;
-    // } else if (event.key === KeyboardCode.ArrowLeft) {
-    //   if (this._cursor.x > 0) {
-    //     this._cursor.x--;
-    //     this._cursor.setText(this._text);
-    //     this._cursor.setLeft(this.textWidth.getTextWidth(this._cursor.textBefore));
-    //   }
-    // } else if (event.key === KeyboardCode.ArrowRight) {
-    //   if (this._cursor.x < this._text.length) {
-    //     this._cursor.x++;
-    //     this._cursor.setText(this._text);
-    //     this._cursor.setLeft(this.textWidth.getTextWidth(this._cursor.textBefore));
-    //   }
-    //
-    // }
   }
 
   get editorHost(): HTMLElement {
